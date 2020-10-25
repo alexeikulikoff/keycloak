@@ -166,7 +166,18 @@
             <artifactId>hamcrest-all</artifactId>
             <scope>test</scope>
         </dependency>
+		        <!-- https://mvnrepository.com/artifact/org.postgresql/postgresql -->
+		<dependency>
+		    <groupId>org.postgresql</groupId>
+		    <artifactId>postgresql</artifactId>
+		    <version>42.2.18</version>
+		    <scope>system</scope>
+		    <systemPath>/usr/local/lib/postgresql-42.2.18.jar</systemPath>
+		</dependency>
+        
+        
         <dependency>
+        
             <groupId>com.icegreen</groupId>
             <artifactId>greenmail</artifactId>
             <scope>test</scope>

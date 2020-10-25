@@ -17,6 +17,13 @@
 
 package org.keycloak.authentication.authenticators.directgrant;
 
+import java.util.LinkedList;
+import java.util.List;
+
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+
+import org.jboss.logging.Logger;
 import org.keycloak.authentication.AuthenticationFlowContext;
 import org.keycloak.authentication.AuthenticationFlowError;
 import org.keycloak.authentication.authenticators.browser.AbstractUsernameFormAuthenticator;
@@ -32,130 +39,133 @@ import org.keycloak.provider.ProviderConfigProperty;
 import org.keycloak.services.ServicesLogger;
 import org.keycloak.services.managers.AuthenticationManager;
 
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import java.util.LinkedList;
-import java.util.List;
-
 /**
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
  * @version $Revision: 1 $
  */
 public class ValidateUsername extends AbstractDirectGrantAuthenticator {
 
-    public static final String PROVIDER_ID = "direct-grant-validate-username";
+	public static final String PROVIDER_ID = "direct-grant-validate-username";
 
-    @Override
-    public void authenticate(AuthenticationFlowContext context) {
-        String username = retrieveUsername(context);
-        if (username == null) {
-            context.getEvent().error(Errors.USER_NOT_FOUND);
-            Response challengeResponse = errorResponse(Response.Status.UNAUTHORIZED.getStatusCode(), "invalid_request", "Missing parameter: username");
-            context.failure(AuthenticationFlowError.INVALID_USER, challengeResponse);
-            return;
-        }
-        context.getEvent().detail(Details.USERNAME, username);
-        context.getAuthenticationSession().setAuthNote(AbstractUsernameFormAuthenticator.ATTEMPTED_USERNAME, username);
+	private static final Logger log = Logger.getLogger(ValidateUsername.class);
 
-        UserModel user = null;
-        try {
-            user = KeycloakModelUtils.findUserByNameOrEmail(context.getSession(), context.getRealm(), username);
-        } catch (ModelDuplicateException mde) {
-            ServicesLogger.LOGGER.modelDuplicateException(mde);
-            Response challengeResponse = errorResponse(Response.Status.UNAUTHORIZED.getStatusCode(), "invalid_request", "Invalid user credentials");
-            context.failure(AuthenticationFlowError.INVALID_USER, challengeResponse);
-            return;
-        }
+	@Override
+	public void authenticate(AuthenticationFlowContext context) {
 
+		String username = retrieveUsername(context);
 
-        if (user == null) {
-            context.getEvent().error(Errors.USER_NOT_FOUND);
-            Response challengeResponse = errorResponse(Response.Status.UNAUTHORIZED.getStatusCode(), "invalid_grant", "Invalid user credentials");
-            context.failure(AuthenticationFlowError.INVALID_USER, challengeResponse);
-            return;
-        }
-        if (!user.isEnabled()) {
-            context.getEvent().user(user);
-            context.getEvent().error(Errors.USER_DISABLED);
-            Response challengeResponse = errorResponse(Response.Status.BAD_REQUEST.getStatusCode(), "invalid_grant", "Account disabled");
-            context.failure(AuthenticationFlowError.INVALID_USER, challengeResponse);
-            return;
-        }
-        if (context.getRealm().isBruteForceProtected()) {
-            if (context.getProtector().isTemporarilyDisabled(context.getSession(), context.getRealm(), user)) {
-                context.getEvent().user(user);
-                context.getEvent().error(Errors.USER_TEMPORARILY_DISABLED);
-                Response challengeResponse = errorResponse(Response.Status.UNAUTHORIZED.getStatusCode(), "invalid_grant", "Invalid user credentials");
-                context.failure(AuthenticationFlowError.INVALID_USER, challengeResponse);
-                return;
-            }
-        }
-        context.setUser(user);
-        context.success();
-    }
+		log.info("Validate usertname: " + username);
 
-    @Override
-    public boolean requiresUser() {
-        return false;
-    }
+		if (username == null) {
+			context.getEvent().error(Errors.USER_NOT_FOUND);
+			Response challengeResponse = errorResponse(Response.Status.UNAUTHORIZED.getStatusCode(), "invalid_request",
+					"Missing parameter: username");
+			context.failure(AuthenticationFlowError.INVALID_USER, challengeResponse);
+			return;
+		}
+		context.getEvent().detail(Details.USERNAME, username);
+		context.getAuthenticationSession().setAuthNote(AbstractUsernameFormAuthenticator.ATTEMPTED_USERNAME, username);
 
-    @Override
-    public boolean configuredFor(KeycloakSession session, RealmModel realm, UserModel user) {
-        return true;
-    }
+		UserModel user = null;
+		try {
+			user = KeycloakModelUtils.findUserByNameOrEmail(context.getSession(), context.getRealm(), username);
+		} catch (ModelDuplicateException mde) {
+			ServicesLogger.LOGGER.modelDuplicateException(mde);
+			Response challengeResponse = errorResponse(Response.Status.UNAUTHORIZED.getStatusCode(), "invalid_request",
+					"Invalid user credentials");
+			context.failure(AuthenticationFlowError.INVALID_USER, challengeResponse);
+			return;
+		}
 
-    @Override
-    public void setRequiredActions(KeycloakSession session, RealmModel realm, UserModel user) {
+		if (user == null) {
+			context.getEvent().error(Errors.USER_NOT_FOUND);
+			Response challengeResponse = errorResponse(Response.Status.UNAUTHORIZED.getStatusCode(), "invalid_grant",
+					"Invalid user credentials");
+			context.failure(AuthenticationFlowError.INVALID_USER, challengeResponse);
+			return;
+		}
+		if (!user.isEnabled()) {
+			context.getEvent().user(user);
+			context.getEvent().error(Errors.USER_DISABLED);
+			Response challengeResponse = errorResponse(Response.Status.BAD_REQUEST.getStatusCode(), "invalid_grant",
+					"Account disabled");
+			context.failure(AuthenticationFlowError.INVALID_USER, challengeResponse);
+			return;
+		}
+		if (context.getRealm().isBruteForceProtected()) {
+			if (context.getProtector().isTemporarilyDisabled(context.getSession(), context.getRealm(), user)) {
+				context.getEvent().user(user);
+				context.getEvent().error(Errors.USER_TEMPORARILY_DISABLED);
+				Response challengeResponse = errorResponse(Response.Status.UNAUTHORIZED.getStatusCode(),
+						"invalid_grant", "Invalid user credentials");
+				context.failure(AuthenticationFlowError.INVALID_USER, challengeResponse);
+				return;
+			}
+		}
+		context.setUser(user);
+		context.success();
+	}
 
-    }
+	@Override
+	public boolean requiresUser() {
+		return false;
+	}
 
-    @Override
-    public boolean isUserSetupAllowed() {
-        return false;
-    }
+	@Override
+	public boolean configuredFor(KeycloakSession session, RealmModel realm, UserModel user) {
+		return true;
+	}
 
+	@Override
+	public void setRequiredActions(KeycloakSession session, RealmModel realm, UserModel user) {
 
-    @Override
-    public String getDisplayType() {
-        return "Username Validation";
-    }
+	}
 
-    @Override
-    public String getReferenceCategory() {
-        return null;
-    }
+	@Override
+	public boolean isUserSetupAllowed() {
+		return false;
+	}
 
-    @Override
-    public boolean isConfigurable() {
-        return false;
-    }
+	@Override
+	public String getDisplayType() {
+		return "Username Validation";
+	}
 
-    public static final AuthenticationExecutionModel.Requirement[] REQUIREMENT_CHOICES = {
-            AuthenticationExecutionModel.Requirement.REQUIRED
-    };
+	@Override
+	public String getReferenceCategory() {
+		return null;
+	}
 
-    @Override
-    public AuthenticationExecutionModel.Requirement[] getRequirementChoices() {
-        return REQUIREMENT_CHOICES;
-    }
+	@Override
+	public boolean isConfigurable() {
+		return false;
+	}
 
-    @Override
-    public String getHelpText() {
-        return "Validates the username supplied as a 'username' form parameter in direct grant request";
-    }
+	public static final AuthenticationExecutionModel.Requirement[] REQUIREMENT_CHOICES = {
+			AuthenticationExecutionModel.Requirement.REQUIRED };
 
-    @Override
-    public List<ProviderConfigProperty> getConfigProperties() {
-        return new LinkedList<>();
-    }
+	@Override
+	public AuthenticationExecutionModel.Requirement[] getRequirementChoices() {
+		return REQUIREMENT_CHOICES;
+	}
 
-    @Override
-    public String getId() {
-        return PROVIDER_ID;
-    }
- 
-    protected String retrieveUsername(AuthenticationFlowContext context) {
-        MultivaluedMap<String, String> inputData = context.getHttpRequest().getDecodedFormParameters();
-        return inputData.getFirst(AuthenticationManager.FORM_USERNAME);
-    }
+	@Override
+	public String getHelpText() {
+		return "Validates the username supplied as a 'username' form parameter in direct grant request";
+	}
+
+	@Override
+	public List<ProviderConfigProperty> getConfigProperties() {
+		return new LinkedList<>();
+	}
+
+	@Override
+	public String getId() {
+		return PROVIDER_ID;
+	}
+
+	protected String retrieveUsername(AuthenticationFlowContext context) {
+		MultivaluedMap<String, String> inputData = context.getHttpRequest().getDecodedFormParameters();
+		return inputData.getFirst(AuthenticationManager.FORM_USERNAME);
+	}
 }

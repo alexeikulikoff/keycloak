@@ -92,6 +92,14 @@
             <version>${picketbox.version}</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+			<groupId>com.googlecode.jinahya</groupId>
+			<artifactId>ocap</artifactId>
+			<version>1.2.3</version>
+		</dependency>
+       
+<!-- Thanks for using https://jar-download.com -->
+        
 
     </dependencies>
 

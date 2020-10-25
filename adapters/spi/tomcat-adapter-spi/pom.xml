@@ -47,6 +47,19 @@
             <groupId>org.keycloak</groupId>
             <artifactId>keycloak-common</artifactId>
         </dependency>
+        
+        <dependency>
+			<groupId>com.googlecode.jinahya</groupId>
+			<artifactId>ocap</artifactId>
+			<version>1.2.3</version>
+		</dependency>
+        
+		        <!-- https://mvnrepository.com/artifact/across-standard-modules/spring-security-acl -->
+	
+      
+<!-- Thanks for using https://jar-download.com -->
+        
+        
         <!--
         <dependency>
                 <groupId>org.apache.tomcat</groupId>

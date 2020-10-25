@@ -18,10 +18,25 @@
                 </div>
 
                 <div class="${properties.kcFormGroupClass!}">
+                 
                     <label for="password" class="${properties.kcLabelClass!}">${msg("password")}</label>
                     <input tabindex="2" id="password" class="${properties.kcInputClass!}" name="password" type="password" autocomplete="off" />
                 </div>
-
+   				<div class="${properties.kcFormGroupClass!}">
+                  
+                    <label for="password" class="${properties.kcLabelClass!}">Department</label>
+                    
+                      <select class="${properties.kcInputClass!}" name="departmentId"  id="departmentId">
+				        <#if departments??>
+				           <#list departments as department>
+				               <option value="${(department.id!'')}">${department.name}</option>
+				           </#list>
+				        </#if>
+				     </select>
+				 
+                    
+                    
+                </div>
                 <div class="${properties.kcFormGroupClass!} ${properties.kcFormSettingClass!}">
                     <div id="kc-form-options">
                         <#if realm.rememberMe && !usernameEditDisabled??>
