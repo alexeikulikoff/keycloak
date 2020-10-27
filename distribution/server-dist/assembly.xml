@@ -118,6 +118,8 @@
                 <include>licenses-${product.slot}/**</include>
             </includes>
         </fileSet>
+       
+	
     </fileSets>
 
     <files>

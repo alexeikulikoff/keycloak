@@ -1,5 +1,5 @@
 #!/bin/bash
 
-mvn -f testsuite/utils/pom.xml exec:java -Pkeycloak-server
+mvn -f testsuite/utils/pom.xml exec:java -e -Pkeycloak-server
 
 
